@@ -1,0 +1,44 @@
+Windows 程序通用迁移银河麒麟开发文档 2026-09-19
+
+一、迁移思路
+1. 先分类程序形态：解释型带运行时与依赖（Python/Java）；编译型静态或带齐动态库（C/C++）；含 COM、注册表等专有技术的先找替代。
+2. 原则：目标机不联网；产物 Windows 侧备好，U 盘部署。
+
+二、目标机摸底（离线）
+1. 终端执行拍照：uname -m、cat /etc/ky-release、ldd --version（glibc 硬底线）、fc-list :lang=zh。
+2. 典型：麒麟桌面 V10 SP1，x86_64，UKUI，glibc 2.31，无 cmake/gcc。
+
+三、编译环境（目标机没有 cmake）
+1. 方式一：有网电脑下载 cmake 及依赖 deb 包，按依赖顺序 dpkg -i 安装，缺什么按报错补。
+2. 方式二（推荐）：WSL 里编译好只拷二进制产物，目标机不装工具链。
+3. 产物 objdump -T 核验 GLIBC 符号；源码编译加 -std=gnu11 防 C23 新符号。
+
+四、通用适配清单
+1. 路径：盘符与反斜杠全改 os.path。
+2. Windows API：startfile 改 xdg-open；taskkill 改 killpg；COM/win32api/ctypes.windll 找替代或降级。
+3. 字体：硬编码中文字体改 fc-match 加覆盖校验的动态选择。
+4. 图标换 PNG+iconphoto；DPI 分平台；自启与关联改等价方式。
+
+五、运行时与依赖打包
+1. Python：Miniforge 建 python+tk 环境，pip download 指定 manylinux 下 wheels，tar 随包，首次自动解压。
+2. C/C++：优先全静态（-static）；需动态库连库拷并 patchelf 设 $ORIGIN。
+3. 自编译组件（如 Tk）：加 -std=gnu11，.symver 压制新 glibc 符号，依赖库随包。
+
+六、验证方法（Windows 端）
+1. WSL2 Ubuntu 装 build-essential、cmake、xvfb、x11-utils、patchelf、imagemagick。
+2. 无头验证：Xvfb 跑程序，import 截图、xwininfo 查窗口（存活期内截）。
+3. 服务/引擎类先最小样例冒烟（健康检查+一次调用）。
+4. 网络：GitHub 用 gh-proxy/ghfast 镜像；deb 用 163 源；老库找 old-releases。
+
+七、部署与启动脚本
+1. 目录结构固定，U 盘须 exFAT/NTFS。
+2. 启动脚本必做：chmod 补执行位、装随包字体、日志落 启动日志.txt、脚本头加 sh 转 bash 自愈、预检关键 import、失败暂停显示错误。
+3. 桌面双击 .sh 弹选择框选在终端运行；直接运行无回显，禁作默认方式。
+
+八、常见坑速查
+1. GLIBC_xx not found：符号超目标机版本，重编译或换老库。
+2. Tk 中文豆腐块：Tk 未链 Xft，自编译带 Xft 的 Tk 换 libtk8.6.so；字体须全字形覆盖（.ttc 或解析失败；日文/繁体字体覆盖不全），内置文泉驿微米黑兜底。
+3. 双击启动闪退：sh 执行遇 bash 语法秒退，加 sh 转 bash 头。
+4. 工具升级后参数语义会变，升级必测。
+5. 替换运行时包后删旧解压目录再启动，否则仍用旧库。
+6. 终验：架构、glibc 符号、完整性、GUI 截图、启动日志。

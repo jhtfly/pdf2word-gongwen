@@ -1,0 +1,4 @@
+PyQt6
+pdf2docx
+python-docx
+rapidocr-onnxruntime

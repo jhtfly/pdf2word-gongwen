@@ -1,0 +1,20 @@
+{
+  "enabled": false,
+  "margin_top": 3.7,
+  "margin_bottom": 3.5,
+  "margin_left": 2.8,
+  "margin_right": 2.6,
+  "title_font": "方正小标宋简体",
+  "title_size": 22.0,
+  "body_font": "仿宋_GB2312",
+  "body_size": 16.0,
+  "line_spacing": 28.0,
+  "first_line_chars": 2,
+  "h1_font": "黑体",
+  "h2_font": "楷体_GB2312",
+  "auto_sign": true,
+  "sign_right_chars": 2,
+  "table_font_size": 12.0,
+  "detect_title": true,
+  "detect_headings": true
+}

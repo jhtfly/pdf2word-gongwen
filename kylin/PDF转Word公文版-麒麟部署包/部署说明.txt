@@ -1,0 +1,59 @@
+PDF 转 Word 公文格式转换器 —— 银河麒麟部署说明
+=====================================================
+
+【适用环境】
+- 银河麒麟桌面操作系统 V10 SP1（x86_64，UKUI），实测机型：兆芯 KX-7000 / 32GB
+- glibc 底线 2.31（本包内 Python 运行时兼容 glibc 2.17+，远低于硬底线）
+- 目标机无需联网、无需安装 Python、无需 root 权限
+
+【包内容】
+  app/                    程序源码（与 Windows 版同一套核心代码）
+  runtime/                免安装 Python 3.11 运行时（tar.gz，首次运行自动解压）
+  wheels/                 全部离线依赖（manylinux wheel，PyQt6/pdf2docx/RapidOCR 等）
+  requirements.txt        依赖清单
+  启动.sh                 一键启动脚本（首次运行自动完成解压+装依赖）
+  生成桌面快捷方式.sh      生成桌面图标
+  部署说明.txt            本文件
+
+【部署步骤（U 盘拷贝，exFAT/NTFS 均可）】
+1. 将整个 "PDF转Word公文版-麒麟部署包" 文件夹拷到麒麟机任意位置
+   （建议 ~/桌面 或 /home/用户名/，不要放在系统只读目录）。
+2. 打开文件夹，双击 "启动.sh" → 弹出选择框时选「在终端中运行」。
+   若双击直接用文本编辑器打开，则改为：右键文件夹空白处 → 打开终端，
+   执行：  bash 启动.sh
+3. 首次运行会自动：解压 Python 运行时 → 离线安装依赖 → 预检 → 打开界面。
+   第二次起直接进入界面（全程不联网）。
+4. （可选）双击 "生成桌面快捷方式.sh" 在桌面生成图标；
+   若提示"不信任的应用"，右键图标 → 「允许启动」。
+
+【命令行批量模式（可选）】
+  cd 部署包目录
+  runtime/python/bin/python3 app/main.py --out 输出目录 文件1.pdf 文件2.pdf
+  可加参数 --no-gongwen 表示不做公文格式化；日志写入输出目录"转换日志.txt"。
+
+【公文格式与字体说明（重要）】
+- 程序生成的 docx 中字体按 GB/T 9704-2012 写入：方正小标宋简体（标题）、
+  仿宋_GB2312（正文）、黑体（一级标题）、楷体_GB2312（二级标题）。
+- 麒麟系统通常不含这些 Windows 字体。用 WPS for Linux 打开时若缺字体会自动
+  替换显示，文档本身的字体属性仍然正确，拷回 Windows 打开即为标准公文效果。
+- 如需在麒麟上正确显示，可自行安装字体文件（ Windows 拷贝 simfang.ttf /
+  simhei.ttf / simkai.ttf 放入 ~/.local/share/fonts/ 后执行 fc-cache -f），
+  或在程序"格式参数设置"里改用麒麟自带字体（如 思源宋体 / 文泉驿微米黑）。
+
+【常见问题】
+1. 提示 "error while loading shared libraries: libGL.so.1"
+   → 终端执行：sudo apt install libgl1-mesa-glx（UKUI 桌面一般已自带）。
+2. 提示 GLIBC_xx not found
+   → 本包已按 manylinux2014/2_28 选型规避；若仍出现请把启动日志拍照反馈。
+3. 换新版本部署包后界面异常
+   → 删除部署包内 runtime/python/ 目录后重新运行启动.sh（迁移文档坑 5）。
+4. 终端里中文乱码
+   → 执行 export LANG=zh_CN.UTF-8 后再运行 ./启动.sh。
+5. 转换扫描版 PDF 明显偏慢
+   → 属正常（OCR 逐页识别），KX-7000 8 核约每页 2~5 秒。
+
+【技术参数备查】
+- 运行时：CPython 3.11.17（python-build-standalone，x86_64-unknown-linux-gnu）
+- 依赖平台标签：manylinux2014 / manylinux_2_27 / manylinux_2_28（均 ≤ glibc 2.31）
+- OCR：RapidOCR（PP-OCR 模型，ONNXRuntime CPU，纯本地离线）
+- 依赖安装方式：pip --no-index --find-links wheels（完全离线）
